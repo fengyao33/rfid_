@@ -1,0 +1,459 @@
+<script setup>
+	import {
+		ref, reactive, computed
+	} from 'vue'
+
+	import {
+		onLoad,
+		onShow,
+		onHide,
+		onBackPress,
+	} from "@dcloudio/uni-app"
+	
+	import JsonDate from '../../static/testJson.json'
+
+	const page_state = reactive({
+		btn1Info: "開始盤點",
+		tagsAmount: 0, 
+		btn2Disabled: false, 
+		btn3Disabled: false, 
+		cbDisabled: false, 
+		dataList: [] 
+	})
+
+	let main = plus.android.runtimeMainActivity()
+
+	const hhwUHFController = getApp().globalData.hhwUHFController
+
+	const globalEvent = getApp().globalData.globalEvent
+
+	const pageNum = ref(100)
+	const offset = ref(50)
+
+	const epcList = ref([])
+
+	const tempList = ref([])
+
+	const async_flag = ref(false)
+
+	const voice_flag = ref(true)
+	
+	const keyDownTime = ref(1);
+	const barcode_flag = ref(false);
+	
+	const forTestAry = ref([])
+	
+	const socketTask = getApp().globalData.socketTask; 
+	
+	const rTempList = ref([])
+	const rEpcList = ref([])
+	const redundant = ref([])
+	
+	const jsonSet = new Set();
+	
+	const calculateTest = computed(() => {
+		const test = page_state.dataList;
+		const time = test.filter(item => item.show === true); 
+		return time.length;
+	});
+	const calculateError = computed(() => {
+		const test = page_state.dataList;
+		const time = test.filter(item => item.show === true); 
+		return time.length;
+	});
+	
+	const rfidEventHandler = () => {
+		const result = e.tag_info_list
+		if (result == null) {
+			const event = e.inventory_event
+			if (event == "stopInventory") {
+				uni.showToast({
+					title: "停止盤點",
+					icon: "none"
+				})
+				page_state.btn2Disabled = false
+				page_state.btn3Disabled = false
+				page_state.cbDisabled = false
+				page_state.btn1Info = "開始盤點"
+			}
+			return
+		}
+				
+		for (let i = 0; i < result.length; i++) {
+			const id = i
+			const epc = bytes2HexString(result[i].EpcId)
+			
+			if(!jsonSet.has(epc)){
+				const tag = {
+					id: id,
+					epc: epc,
+					count: 1,
+					rssi: 0,
+					show: true
+				}
+				
+				jsonSet.add(epc)
+				redundant.value.push(tag)
+			}else{
+				changeDataList(epc)
+			}
+			
+			return
+		
+			const rssi = result[i].RSSI
+			const tag = {
+				id: id,
+				epc: epc,
+				count: 1,
+				rssi: rssi,
+				show: false
+			}
+			
+			const index = epcList.value.indexOf(epc)
+			if (index == -1) {
+				tag.id = epcList.value.length
+				if (page_state.dataList.length < offset.value) {
+					page_state.dataList.push(tag)
+				}
+				tempList.value.push(tag)
+				epcList.value.push(epc)
+			} else {
+				tag.id = index
+				tag.count = tempList.value[index].count + 1
+				if (index < page_state.dataList.length) {
+					page_state.dataList.splice(index, 1, tag)
+				}
+				tempList.value.splice(index, 1, tag)
+			}					
+			
+		}
+		page_state.tagsAmount = epcList.value.length
+	}
+
+	const addRfid = async () => {
+		await globalEvent.addEventListener('uhf_tag_event', rfidEventHandler)
+	}
+	const removeRfid = async () => {
+		await globalEvent.removeEventListener('uhf_tag_event', uhfTagEventHandler);
+	}
+	
+	const exit = () => {
+		main.unregisterReceiver(receiver)
+		stopInventory()
+		removeRfid()
+	}
+	
+	onLoad(() => {
+		readJsonFile() 
+		addRfid()
+	})
+
+	onShow(() => {
+		initBarcodeScan()
+		disableBarcodeScanKey()
+
+		var IntentFilter = plus.android.importClass('android.content.IntentFilter')
+		var filter = new IntentFilter()
+		filter.addAction("android.rfid.FUN_KEY")
+		
+		
+		receiver = plus.android.implements('io.dcloud.feature.internal.reflect.BroadcastReceiver', {
+			onReceive: function(context, intent) {
+				
+				plus.android.importClass(intent)
+				const code = intent.getIntExtra("keyCode", 0)
+				const keyDown = intent.getBooleanExtra("keydown", false)
+				
+				if (keyDown && keyDownTime.value == 1 && code == 134) {
+					startInventory();
+					keyDownTime.value += 1;
+				} else if (!keyDown) {
+					stopInventory();
+					keyDownTime.value = 1;
+				}
+			}
+		})
+		main.registerReceiver(receiver, filter)
+	})
+
+	onHide(() => {
+		exit()
+	})
+	
+	onBackPress(() => {
+		exit()
+	})
+
+    const disableBarcodeScanKey = () =>{
+		
+		var Intent = plus.android.importClass("android.content.Intent")
+		var intent = new Intent("com.rfid.KEY_SET")
+		var keyValueArray = ["134"]
+		intent.putExtra("keyValueArray", keyValueArray)
+		intent.putExtra("134", false)
+		main.sendBroadcast(intent)
+    }
+	
+	const bytes2HexString = (byteArray) => {
+		return Array.from(byteArray, function(byte) {
+			return ('0' + (byte & 0xFF).toString(16)).slice(-2)
+		}).join('')
+	}
+
+	const hexString2Bytes = (str) => {
+		let pos = 0
+		let len = str.length
+		if (len % 2 != 0) {
+			return null
+		}
+		len /= 2
+		let hexA = new Array()
+		for (let i = 0; i < len; i++) {
+			let s = str.substr(pos, 2)
+			let v = parseInt(s, 16)
+			hexA.push(v)
+			pos += 2
+		}
+		return hexA
+	}
+
+	const initBarcodeScan = () => {
+		const Intent = plus.android.importClass("android.content.Intent")
+		const intent = new Intent("com.rfid.SCAN_INIT")
+		main.sendBroadcast(intent);
+	}
+	
+
+	const startBarcodeScan = () => {
+		const Intent = plus.android.importClass("android.content.Intent")
+		const intent = new Intent("com.rfid.SCAN_CMD")
+		main.sendBroadcast(intent);
+	}
+	// 暂停二维码扫描
+	const stopBarcodeScan = () => {
+		const Intent = plus.android.importClass("android.content.Intent")
+		const intent = new Intent("com.rfid.STOP_SCAN")
+		main.sendBroadcast(intent);
+	}
+	
+	const inventory = () => {
+		if (page_state.btn1Info == "開始盤點") {
+			startInventory()
+		} else {
+			stopInventory()
+		}
+	}
+	
+
+	const startInventory = () => {
+		page_state.btn2Disabled = true
+		page_state.btn3Disabled = true
+		page_state.cbDisabled = true
+		page_state.btn1Info = "停止盤點"
+		hhwUHFController.setCancleInventoryFilter();
+		if (async_flag.value) {
+				hhwUHFController.startInventory(30, 1, true, 0, voice_flag.value, result => {
+					console.log("inventory inventory", "startInventory " + result)
+				})
+		} else {
+				console.log("async_flag")
+				hhwUHFController.startInventory(30,0, false, 0, voice_flag.value, result => {
+					console.log("inventory inventory", "startInventory " + result)
+				})	
+		}
+	}
+	
+	const stopInventory = () => {
+		if (async_flag.value) {
+			hhwUHFController.stopInventory(true)
+		} else {
+			hhwUHFController.stopInventory(false)
+		}
+	}
+
+	const data = ref("3600")
+	const clear = () => {
+		page_state.dataList = []
+		tempList.value = []
+		epcList.value = []
+		page_state.tagsAmount = 0
+		offset.value = 50
+	}
+	
+	const writeToFile = (epcArray) => {
+		forTestAry.value = epcArray
+	}
+	
+	// const jsonData = ref([])
+	const totalLength = ref(0)
+    const readJsonFile = () => {
+		// jsonData.value = JsonDate
+		page_state.dataList = JsonDate
+		
+		totalLength.value = page_state.dataList.length
+		
+	   for (let i = 0; i < JsonDate.length; i++) {
+			const epc = JsonDate[i].epc;
+			jsonSet.add(epc); 
+		}
+
+		const epcArray = Array.from(jsonSet);
+		writeToFile(epcArray);
+    }
+	
+	// const testFleg = ref(false)
+	// const test = () => {
+	// 	testFleg.value = !testFleg.value
+	// 	console.log(page_state.dataList)
+	// }
+	
+	const changeDataList = (epc) => {
+		 page_state.dataList.forEach(item => {
+			if (item.epc === epc) {
+				item.show = true; 
+			}
+		});	
+	}
+	
+	const isEpcDuplicate = (show) => {
+		if(show){
+			return true
+		}else{
+			return false;
+		}
+    }
+
+</script>
+
+<template>
+	<text class="line">Inventory ( {{ calculateTest }} / {{ totalLength }} )</text>
+	<list class="list">
+		<header>
+			<view class="list-item-head">
+				<text class="list-item-text-id">paller</text>
+				<text class="list-item-text-epc">epc</text>
+			</view>
+		</header>
+		<cell v-for="(item, index) in page_state.dataList" v-bind:key="item.id">
+			<view class="list-item" :class="{ 'showGreen': isEpcDuplicate(item.show) }">
+				<text class="list-item-text-id">{{item.id}}</text>
+				<text class="list-item-text-epc">{{item.epc}}</text>
+			</view>
+		</cell>
+	</list>
+	<text class="line">No records ( {{ redundant.length }} )</text>
+	<list class="list2">
+		<header>
+			<view class="list-item-head">
+				<text class="list-item-text-id">paller</text>
+				<text class="list-item-text-epc">epc</text>
+			</view>
+		</header>
+		<cell v-for="(item, index) in redundant" v-bind:key="item.id">
+			<view class="list-item" :class="{ 'showRed': isEpcDuplicate(item.show) }">
+				<text class="list-item-text-id">{{item.id}}</text>
+				<text class="list-item-text-epc">{{item.epc}}</text>
+			</view>
+		</cell>
+	</list>
+	<view style="flex-direction: row;padding: 8rpx;align-items: center;margin-top: 5rpx;margin-bottom: 5rpx;">
+		<text>標籤數量:</text>
+		<text>{{page_state.tagsAmount}}</text>
+
+	</view>
+	<view class="btn-box">
+		<button type="primary" @click="inventory()" style="flex: 3;">{{page_state.btn1Info}}</button>
+		<!-- <button type="primary" @click="test()"style="flex: 1;margin-left: 5px;">模擬盤點狀況</button> -->
+<!-- 		<button type="primary" :disabled="page_state.btn3Disabled" @click="clear()"
+			style="flex: 1;margin-left: 5px;">清空</button> -->
+	</view>
+</template>
+
+<style scoped>
+	.list {
+		flex: 1;
+		background-color: #ebebeb;
+		max-height: 400px;
+		min-height: 400px;
+	}
+	
+	.list2 {
+		flex: 1;
+		background-color: #ebebeb;
+		min-height: 200px;
+		max-height: 200px;
+	}
+
+	.list-item-head {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+	}
+
+	.list-item {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+	}
+
+	.list-item-text-id {
+		width: 80px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+
+	.list-item-text-epc {
+		width: 247px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+
+	.list-item-text-count {
+		width: 65px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+
+	.list-item-text-rssi {
+		width: 35px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+
+	.btn-box {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+		padding-bottom: 5px;
+		padding-left: 5px;
+		padding-right: 5px;
+		align-items: center;
+	}
+	
+	.showGreen {
+		background-color: chartreuse;
+	}
+	
+	.showRed {
+		background-color: red;
+	}
+	
+	.line{
+		width: 410px;
+		background-color: #9e9e9e;
+		padding: 5px 15px;
+		text-align: center
+	}
+</style>

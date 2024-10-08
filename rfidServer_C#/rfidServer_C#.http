@@ -1,0 +1,6 @@
+@rfidServer_C__HostAddress = http://localhost:5244
+
+GET {{rfidServer_C__HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

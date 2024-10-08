@@ -1,0 +1,41 @@
+<template>
+	<view style="justify-content: center;align-items: center; margin-top: 300px;">
+	  <button @click="scanQRCode">scan login </button>
+		<view v-if="scanResult">
+		  result: {{ scanResult }}
+		</view>
+	</view>
+</template>
+
+<script setup>
+	import { ref  } from "vue"
+	import {
+		onLoad,
+		onShow,
+		onHide,
+	} from "@dcloudio/uni-app"
+	
+	const scanResult = ref("")
+	
+	const scanQRCode = () => {
+	
+	  uni.scanCode({
+		success: (res) => {
+			console.log(1, res)
+			scanResult.value = res
+			
+			uni.navigateTo({
+				url: `/pages/inventory/inventory-barcode`
+			});
+		},
+		fail: (err) => {
+		  console.error('login failed', err);
+		}
+	  });
+	}
+	
+</script>
+
+<style>
+	       
+</style>

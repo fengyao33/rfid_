@@ -1,0 +1,598 @@
+<template>
+<text class="line">{{ action }}</text>
+<view class="scroll-Y">
+	 <list class="list" loadmoreoffset="5" @loadmore="loadmore()">
+		<header>
+			<view class="list-item-head">
+				<text class="list-item-text-id">id</text>
+				<text class="list-item-text-epc">epc</text>
+				<text class="list-item-text-count">count</text>
+				<text class="list-item-text-rssi">rssi</text>
+			</view>
+		</header>
+		<cell v-for="(item, index) in page_state.dataList" v-bind:key="item.id">
+			<view class="list-item" @click="getItemDetail(item.epc)">
+				<text class="list-item-text-id">{{item.id}}</text>
+				<text class="list-item-text-epc">{{item.epc}}</text>
+				<text class="list-item-text-count">{{item.count}}</text>
+				<text class="list-item-text-rssi">{{item.rssi}}</text>
+			</view>
+		</cell>
+	 </list>
+ </view>
+ <text class="line">Details : {{ epc }}</text>
+ <view class="ctx-scroll-Y">
+ 	 <list class="ctx-list" v-if="action === 'History'">
+ 		<header>
+ 			<view class="ctx-list-item-head">
+ 				<text class="ctx-list-item-text-pallet">tagID</text>
+ 				<text class="ctx-list-item-text-order">location</text>
+ 				<text class="ctx-list-item-text-product">bDate</text>
+ 			</view>
+ 		</header>
+ 		<cell v-for="(item, index) in hCtx_item" v-bind:key="item.id">
+ 			<view class="ctx-list-item">
+ 				<text class="ctx-list-item-text-pallet">{{item.tagID}}</text>
+ 				<text class="ctx-list-item-text-order">{{item.location}}</text>
+ 				<text class="ctx-list-item-text-product">{{item.bDate}}</text>
+ 			</view>
+ 		</cell>
+ 	 </list>
+	 <list class="ctx-list" v-else>
+	  		<header>
+	  			<view class="ctx-list-item-head">
+	  				<text class="ctx-list-item-text-pallet">palletno</text>
+	  				<text class="ctx-list-item-text-order">p-qty</text>
+	  				<text class="ctx-list-item-text-product">b-qty</text>
+	  				<text class="ctx-list-item-text-product">b-s</text>
+	  				<text class="ctx-list-item-text-product">b-e</text>
+	  				<text class="ctx-list-item-text-product">boxgw</text>
+	  				<text class="ctx-list-item-text-product">boxnw</text>
+	  				<text class="ctx-list-item-text-product">MATNR</text>
+	  				<text class="ctx-list-item-text-product">KDMAT</text>
+	  				<text class="ctx-list-item-text-product">mo</text>
+	  			</view>
+	  		</header>
+	  		<cell v-for="(item, index) in qCtx_item" v-bind:key="item.workOrderNo">
+	  			<view class="ctx-list-item">
+	  				<text class="ctx-list-item-text-pallet">{{item.palletNo}}</text>
+	  				<text class="ctx-list-item-text-order">{{item.palletQty}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.boxQty}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.boxNoStart}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.boxNoEnd}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.batNo}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.boxGw}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.boxNw}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.materialNo}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.customerMaterialNo}}</text>
+	  				<text class="ctx-list-item-text-product">{{item.workOrderNo}}</text>
+	  			</view>
+	  		</cell>
+	 </list>
+  </view>
+ 
+ <view class="btn-box">
+ 	<button type="primary" @click="inventory()" style="flex: 3;">{{page_state.btn1Info}}</button>
+	<button type="primary" @click="write_test()" style="flex: 3;margin-left: 5px;">寫入</button>
+ 	<button type="primary" :disabled="page_state.btn3Disabled" @click="clear()"
+ 		style="flex: 1;margin-left: 5px;">清空</button>
+ </view>
+</template>
+
+<script setup>
+	import {
+		reactive, ref
+	} from 'vue'
+	
+	import {
+		onLoad,
+		onShow,
+		onHide,
+		onBackPress
+	} from "@dcloudio/uni-app"
+	
+	const page_state = reactive({
+		btn1Info: "開始掃描",
+		tagsAmount: 0, 
+		btn2Disabled: false, 
+		btn3Disabled: false, 
+		cbDisabled: false, 
+		dataList: [] 
+	})
+	
+	const hCtx_item = ref([])  // detail
+	const qCtx_item = ref([])  // detail
+	var main = plus.android.runtimeMainActivity()
+	var hhwUHFController = getApp().globalData.hhwUHFController
+	var globalEvent = getApp().globalData.globalEvent
+	
+	var pageNum = 100
+	var offset = 50
+	var epcList = []
+	var tempList = []
+	
+	var async_flag = false
+	var voice_flag = false
+	
+	var keyDownTime = 1;
+	var barcode_flag = false;
+	
+	var socketTask;
+	
+	const action = ref('')
+	
+	onLoad(() => {
+			
+		action.value = getApp().globalData.status
+			
+		uni.onSocketOpen(() => {
+		  console.log('query connet success')
+		})
+		
+		socketTask = uni.connectSocket({
+		  url: 'ws://192.168.61.104:3333/ws',
+		  header: {
+		    'content-type': 'application/json'
+		  },
+		  protocols: ['protocol1'],
+		  method: 'GET'
+		});
+		
+		uni.onSocketOpen(function(res) {
+			console.log('WebSocket 連線成功');
+		
+			const message = {
+			  type: 'register',
+			  data: '連線測試....'
+			};
+		
+			uni.sendSocketMessage({
+			  data: JSON.stringify(message), 
+			  success: () => {
+				uni.showToast({
+					title: 'conect server success',
+					icon: "success",
+					duration: 1000
+				});
+			  },
+			  fail: (err) => {
+				uni.showToast({
+					title: 'conect server fail',
+					icon: "fail",
+					duration: 1000
+				});
+			  }
+			});
+		});
+		
+		
+		uni.onSocketMessage((res) => {
+		
+			const response = JSON.parse(res.data);
+			if (response.type === 'historyRecorded') {
+				if(response.data.length > 0 ){
+					hCtx_item.value = response.data
+				}
+			}else if(response.type === 'queryResult'){
+				console.log('queryResult',  response.data)
+				
+				if(response.data.length > 0){
+					qCtx_item.value = response.data
+				}
+			}
+		});
+		globalEvent.addEventListener('uhf_tag_event', function(e) {
+			var result = e.tag_info_list
+			if (result == null) {
+				var event = e.inventory_event
+				
+				if (event == "stopInventory") {
+					uni.showToast({
+						title: "停止盘点",
+						icon: "none"
+					})
+					page_state.btn2Disabled = false
+					page_state.btn3Disabled = false
+					page_state.cbDisabled = false
+					page_state.btn1Info = "開始掃描"
+				}
+				return
+			}
+			
+			for (var i = 0; i < result.length; i++) {
+				var id = i
+				var epc = bytes2HexString(result[i].EpcId)
+				var rssi = result[i].RSSI // received signal strength indicator
+				
+						console.log(epc)
+				var tag = {
+					id: id,
+					epc: epc,
+					count: 1,
+					rssi: rssi,
+				}
+				var index = epcList.indexOf(epc)
+				if (index == -1) {
+					tag.id = epcList.length
+					if (page_state.dataList.length < offset) {
+						page_state.dataList.push(tag)
+					}
+					tempList.push(tag)
+					epcList.push(epc)
+				} else {
+					tag.id = index
+					tag.count = tempList[index].count + 1
+					if (index < page_state.dataList.length) {
+						page_state.dataList.splice(index, 1, tag)
+					}
+					tempList.splice(index, 1, tag)
+				}
+			}
+			page_state.tagsAmount = epcList.length
+		})
+		
+	})
+
+	onShow(() => {
+
+		initBarcodeScan()
+		disableBarcodeScanKey()
+		
+		var IntentFilter = plus.android.importClass('android.content.IntentFilter')
+		var filter = new IntentFilter()
+		filter.addAction("android.rfid.FUN_KEY")
+		receiver = plus.android.implements('io.dcloud.feature.internal.reflect.BroadcastReceiver', {
+			onReceive: function(context, intent) {
+				plus.android.importClass(intent)
+				var code = intent.getIntExtra("keyCode", 0)
+				var keyDown = intent.getBooleanExtra("keydown", false)
+				if (keyDown && keyDownTime == 1 && code == 137) {
+					console.log("inventory", "receive keyUp code: " + code)
+					if (barcode_flag) {
+						startBarcodeScan()
+					} else {
+						startInventory()
+					}
+					keyDownTime++
+				} else if (!keyDown) {
+					if (barcode_flag) {
+						stopBarcodeScan()
+					} else {
+						stopInventory()
+					}
+					keyDownTime = 1
+				}
+			}
+		})
+		main.registerReceiver(receiver, filter)
+	})
+	
+	onHide(() => {
+		main.unregisterReceiver(receiver)
+		stopInventory(true)
+	})
+	
+	onBackPress(() => {
+		closeSocket()
+		stopInventory()
+	})
+	const initBarcodeScan = () => {
+		var Intent = plus.android.importClass("android.content.Intent")
+		var intent = new Intent("com.rfid.SCAN_INIT")
+		main.sendBroadcast(intent);
+	}
+	
+	const startBarcodeScan = () => {
+		var Intent = plus.android.importClass("android.content.Intent")
+		var intent = new Intent("com.rfid.SCAN_CMD")
+		main.sendBroadcast(intent);
+	}
+	
+	const stopBarcodeScan = () => {
+		var Intent = plus.android.importClass("android.content.Intent")
+		var intent = new Intent("com.rfid.STOP_SCAN")
+		main.sendBroadcast(intent);
+	}
+	
+	const disableBarcodeScanKey = () => {
+		var Intent = plus.android.importClass("android.content.Intent")
+		var intent = new Intent("com.rfid.KEY_SET")
+		var keyValueArray = ["137"]
+		intent.putExtra("keyValueArray", keyValueArray)
+		intent.putExtra("137", false)
+		main.sendBroadcast(intent)
+	}
+	
+	const bytes2HexString = (byteArray) => {
+	    return Array.from(byteArray, (byte) => {
+	        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
+	    }).join('');
+	};
+	
+	const hexString2Bytes = (str) => {
+		var pos = 0
+		var len = str.length
+		if (len % 2 != 0) {
+			return null
+		}
+		len /= 2
+		var hexA = new Array()
+		for (var i = 0; i < len; i++) {
+			var s = str.substr(pos, 2)
+			var v = parseInt(s, 16)
+			hexA.push(v)
+			pos += 2
+		}
+		return hexA
+	}
+	
+	const inventory = () => {
+		if (page_state.btn1Info == "開始掃描") {
+			startInventory()
+		} else {
+			stopInventory()
+		}
+	}
+	
+	const stopInventory = () => {
+		if (async_flag) {
+			hhwUHFController.stopInventory(true)
+		} else {
+			hhwUHFController.stopInventory(false)
+		}
+	}
+	
+	var data = "3600"
+	const clear = () => {
+		page_state.dataList = []
+		tempList = []
+		epcList = []
+		page_state.tagsAmount = 0
+		offset = 50
+	}
+	
+	const loadmore = () => {
+		console.log("inventory loadmore", "dataList size1: " + page_state.dataList.length, "temList size: " + tempList.length)
+		if (page_state.dataList.length >= tempList.length) {
+			console.log("inventory loadmore", "nomore")
+			return
+		}
+		var size
+		if (tempList.length - offset >= pageNum) {
+			size = pageNum
+		} else {
+			size = tempList.length - offset
+		}
+		for (var i = offset; i < size + offset; i++) {
+			page_state.dataList.push(tempList[i])
+		}
+		offset = offset + size
+	}
+	
+	const startInventory = () => {
+		page_state.btn2Disabled = true
+		page_state.btn3Disabled = true
+		page_state.cbDisabled = true
+		page_state.btn1Info = "停止掃描"
+		hhwUHFController.setCancleInventoryFilter();
+		
+		if (async_flag) {
+			// 设置盘点的session为1
+			// 	console.log("inventory inventory", "async setGen2session: " + result)
+				// 大量标签场景（200张标签以上），开始异步盘点，手动调用停止盘点后，停止盘点
+				hhwUHFController.startInventory(30, 1, true, 0, voice_flag, result => {
+					console.log("inventory inventory", "startInventory " + result)
+				})
+			// })
+		} else {
+			// 设置盘点的session为0
+				console.log("async_flag")
+				// 少量标签场景（200张标签以下），开始同步盘点，手动调用停止盘点后，停止盘点
+				hhwUHFController.startInventory(30,0, false, 0, voice_flag, result => {
+					console.log("inventory inventory", "startInventory " + result)
+				})	
+		}
+	}
+	
+	const test = (item) => {
+		console.log(item)
+		epc.value = item.epc
+	}
+	const epc = ref('')
+	const getItemDetail = (epc) => {
+		epc.value = epc 
+		
+		if (action.value === 'Query' || action.value === 'History') {
+			
+			const message = {
+				type: action.value,
+				data: {
+					tagId: epc,
+				}
+			}
+			
+			uni.sendSocketMessage({
+				data: JSON.stringify(message),
+				 success: () => {
+				console.log('s2:', epc)
+				   },
+				 fail: (err) => {
+				console.error('f3:', err)
+				   },
+			})
+		}
+		
+	} 
+	
+	const closeSocket = () => {
+		
+		uni.sendSocketMessage({
+			data: JSON.stringify({
+				type: "Closing"
+			}),
+			 success: () => {
+			console.log('s2:', epc)
+			   },
+			 fail: (err) => {
+			console.error('f3:', err)
+			   },
+		})
+	}
+	const write_test = ()  => {
+		
+		hhwUHFController.writeTagEPCByFilter('911deabcdeabce1119c7e8db', '00000000', 1000, '910deabcdeabce1119c7e8db', 1, 2, true, result => {	
+			if (result) {
+				console.log(result)
+			} else {
+				console.log('Write failed')
+			}
+		});
+	}
+
+	const scrollTop = ref(0)
+	
+</script>
+<style scoped>
+	.list {
+		flex: 1;
+		background-color: #ebebeb;
+	}
+	
+	.list-item-head {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+	}
+	
+	.list-item {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+	}
+	
+	.list-item-text-id {
+		width: 65px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.list-item-text-epc {
+		width: 247px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.list-item-text-count {
+		width: 65px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.list-item-text-rssi {
+		width: 35px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.btn-box {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+		padding-bottom: 5px;
+		padding-left: 5px;
+		padding-right: 5px;
+		align-items: center;
+	}
+	
+	.scroll-Y {
+		height: 500rpx;
+	}
+	
+	
+	.ctx-list {
+		flex: 1;
+		background-color: #ebebeb;
+	}
+	
+	.ctx-list-item-head {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+	}
+	
+	.ctx-list-item {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+	}
+	
+	.ctx-list-item-text-pallet {
+		width: 65px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.ctx-list-item-text-order {
+		width: 85px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.ctx-list-item-text-product {
+		width: 100px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	
+	.ctx-list-item-text-quantity {
+		width: 80px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.ctx-list-item-text-nob {
+		width: 80px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.ctx-scroll-Y {
+		height: 670rpx;
+	}
+	
+	.line{
+		width: 410px;
+		background-color: #9e9e9e;
+		padding: 5px 15px;
+		text-align: center
+		
+	}
+</style>

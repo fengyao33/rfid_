@@ -1,0 +1,43 @@
+<template>
+  <view class="content">
+		<list-view ref="listView" class="list" :scroll-y="true" style="margin: 20px 10px;">
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#1AAD19;borderColor:#1AAD19;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('query')">Query</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#00aaff;borderColor:#00aaff;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('query')">History</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#5555ff;borderColor:#5555ff;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('query')">Package</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#aaaa00;borderColor:#aaaa00;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('query')">Storage In</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#aa557f;borderColor:#aa557f;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('query')">Storage Out</button>	
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#aa557f;borderColor:#aa557f;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('query')">Ship</button>	
+		</list-view>
+	  </view>
+</template>
+
+<script setup>
+	import {
+		onLoad,
+		onShow,
+		onHide,
+	} from "@dcloudio/uni-app"
+	
+	onShow(() => {
+		console.log(getApp().globalData.dataSet)
+	})
+	const go = (path) => {
+		console.log(path)
+		uni.navigateTo({
+			url: `/pages/inventory/${path}`
+		});
+	}
+
+</script>

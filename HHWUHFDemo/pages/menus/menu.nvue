@@ -1,0 +1,70 @@
+<template>
+  <view class="content">
+		<list-view ref="listView" class="list" :scroll-y="true" style="margin: 20px 10px;">
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#1AAD19;borderColor:#1AAD19;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('search', 'Query')">Query</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#00aaff;borderColor:#00aaff;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('search', 'History')">History</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#5555ff;borderColor:#5555ff;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('package', '')">Package</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#aaaa00;borderColor:#aaaa00;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go()">Stoking</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#aa557f;borderColor:#aa557f;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go()">Picking</button>	
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#aa557f;borderColor:#aa557f;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go()">Ship</button>	
+			
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#aa557f;borderColor:#aa557f;margin-bottom: 10px;"
+			hover-class="is-hover" @click="go('test', '')">test</button>	
+		</list-view>
+	  </view>
+	  <view>
+	  	<div class="buttom-bar">{{ showUser() }}</div>
+	  </view>
+</template>
+
+<script setup>
+	import {
+		onLoad,
+		onShow,
+		onHide,
+	} from "@dcloudio/uni-app"
+	import { ref } from "vue"
+	
+	const dataSet = ref();
+	const flag = ref(false)
+	onLoad(() => {
+		dataSet.value = getApp().globalData.dataSet
+		
+		if(dataSet.value.area === 'Da-Fa'){
+			flag.value = true
+		}else{
+			flag.value = false
+		}
+		
+	})
+	
+	
+	const go = (path, action) => {
+		if(path){
+			getApp().globalData.status = action
+			uni.navigateTo({
+				url: `/pages/utils/${path}`
+			});			
+		}
+	}
+	
+	const showUser = () => {
+		console.log(dataSet.value)
+		const { userId, area } = dataSet.value
+		return `${userId} , ${area}`
+	}
+
+</script>

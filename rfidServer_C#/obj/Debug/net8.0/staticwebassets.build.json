@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "4vq7bOy7S1Kase+mObQvJpi5Hm0h9A1nKRuXIUys0es=",
+  "Source": "rfidServer_C#",
+  "BasePath": "_content/rfidServer_C#",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}

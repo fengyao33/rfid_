@@ -1,0 +1,331 @@
+[
+    {
+        "id": 0,
+        "epc": "e28068940000502fbf210d79",
+        "count": 20,
+        "rssi": -57,
+        "show": false
+    },
+    {
+        "id": 1,
+        "epc": "e28068940000402fbf213d78",
+        "count": 13,
+        "rssi": -64,
+        "show": false
+    },
+    {
+        "id": 2,
+        "epc": "e28068940000502fbf21c47a",
+        "count": 12,
+        "rssi": -58,
+        "show": false
+    },
+    {
+        "id": 3,
+        "epc": "e28068940000502fbf23cc79",
+        "count": 67,
+        "rssi": -39,
+        "show": false
+    },
+    {
+        "id": 4,
+        "epc": "e28068940000502fbf213179",
+        "count": 13,
+        "rssi": -64,
+        "show": false
+    },
+    {
+        "id": 5,
+        "epc": "e28068940000402fbf22747a",
+        "count": 16,
+        "rssi": -64,
+        "show": false
+    },
+    {
+        "id": 6,
+        "epc": "e28068940000502fbf218878",
+        "count": 25,
+        "rssi": -53,
+        "show": false
+    },
+    {
+        "id": 7,
+        "epc": "e28068940000502fbf269d7b",
+        "count": 46,
+        "rssi": -45,
+        "show": false
+    },
+    {
+        "id": 8,
+        "epc": "e28068940000402fbf234979",
+        "count": 32,
+        "rssi": -53,
+        "show": false
+    },
+    {
+        "id": 9,
+        "epc": "e28068940000402fbf28a17b",
+        "count": 4,
+        "rssi": -69,
+        "show": false
+    },
+    {
+        "id": 10,
+        "epc": "e28068940000502fbf22b87b",
+        "count": 30,
+        "rssi": -45,
+        "show": false
+    },
+    {
+        "id": 11,
+        "epc": "e28068940000402fbf22407b",
+        "count": 13,
+        "rssi": -55,
+        "show": false
+    },
+    {
+        "id": 12,
+        "epc": "e28068940000402fbf22347b",
+        "count": 12,
+        "rssi": -50,
+        "show": false
+    },
+    {
+        "id": 13,
+        "epc": "e28068940000402fbf219478",
+        "count": 38,
+        "rssi": -47,
+        "show": false
+    },
+    {
+        "id": 14,
+        "epc": "e28068940000402fbf20c578",
+        "count": 48,
+        "rssi": -46,
+        "show": false
+    },
+    {
+        "id": 15,
+        "epc": "e28068940000402fbf27387b",
+        "count": 13,
+        "rssi": -63,
+        "show": false
+    },
+    {
+        "id": 16,
+        "epc": "e28068940000502fbf215978",
+        "count": 28,
+        "rssi": -43,
+        "show": false
+    },
+    {
+        "id": 17,
+        "epc": "e28068940000402fbf28f97c",
+        "count": 6,
+        "rssi": -63,
+        "show": false
+    },
+    {
+        "id": 18,
+        "epc": "e28068940000502fbf21c87a",
+        "count": 31,
+        "rssi": -56,
+        "show": false
+    },
+    {
+        "id": 19,
+        "epc": "e28068940000402fbf250078",
+        "count": 13,
+        "rssi": -65,
+        "show": false
+    },
+    {
+        "id": 20,
+        "epc": "e28068940000402fbf267079",
+        "count": 37,
+        "rssi": -50,
+        "show": false
+    },
+    {
+        "id": 21,
+        "epc": "e28068940000502fbf27c87a",
+        "count": 6,
+        "rssi": -64,
+        "show": false
+    },
+    {
+        "id": 22,
+        "epc": "e28068940000502fbf21ed78",
+        "count": 9,
+        "rssi": -63,
+        "show": false
+    },
+    {
+        "id": 23,
+        "epc": "e28068940000402fbf22007a",
+        "count": 6,
+        "rssi": -66,
+        "show": false
+    },
+    {
+        "id": 24,
+        "epc": "e28068940000502fbf26497b",
+        "count": 6,
+        "rssi": -65,
+        "show": false
+    },
+    {
+        "id": 25,
+        "epc": "e28068940000502fbf233c7a",
+        "count": 21,
+        "rssi": -63,
+        "show": false
+    },
+    {
+        "id": 26,
+        "epc": "e28068940000402fbf231c7a",
+        "count": 19,
+        "rssi": -53,
+        "show": false
+    },
+    {
+        "id": 27,
+        "epc": "e28068940000502fbf26617b",
+        "count": 10,
+        "rssi": -59,
+        "show": false
+    },
+    {
+        "id": 28,
+        "epc": "e28068940000502fbf22cc7b",
+        "count": 16,
+        "rssi": -57,
+        "show": false
+    },
+    {
+        "id": 29,
+        "epc": "e28068940000402fbf21cd78",
+        "count": 9,
+        "rssi": -64,
+        "show": false
+    },
+    {
+        "id": 30,
+        "epc": "e28068940000402fbf25d17b",
+        "count": 11,
+        "rssi": -60,
+        "show": false
+    },
+    {
+        "id": 31,
+        "epc": "e28068940000502fbf235c7a",
+        "count": 12,
+        "rssi": -57,
+        "show": false
+    },
+    {
+        "id": 32,
+        "epc": "e28068940000502fbf27f57b",
+        "count": 12,
+        "rssi": -67,
+        "show": false
+    },
+    {
+        "id": 33,
+        "epc": "e28068940000402fbf21b87a",
+        "count": 4,
+        "rssi": -69,
+        "show": false
+    },
+    {
+        "id": 34,
+        "epc": "e28068940000502fbf219179",
+        "count": 8,
+        "rssi": -61,
+        "show": false
+    },
+    {
+        "id": 35,
+        "epc": "e28068940000502fbf26347d",
+        "count": 9,
+        "rssi": -64,
+        "show": false
+    },
+    {
+        "id": 36,
+        "epc": "e28068940000502fbf25e97b",
+        "count": 6,
+        "rssi": -54,
+        "show": false
+    },
+    {
+        "id": 37,
+        "epc": "e28068940000402fbf213979",
+        "count": 1,
+        "rssi": -71,
+        "show": false
+    },
+    {
+        "id": 38,
+        "epc": "e28068940000402fbf224c78",
+        "count": 2,
+        "rssi": -65,
+        "show": false
+    },
+    {
+        "id": 39,
+        "epc": "e28068940000402fbf23d979",
+        "count": 7,
+        "rssi": -47,
+        "show": false
+    },
+    {
+        "id": 40,
+        "epc": "e28068940000502fbf21d47b",
+        "count": 4,
+        "rssi": -49,
+        "show": false
+    },
+    {
+        "id": 41,
+        "epc": "e28068940000402fbf21dc7b",
+        "count": 2,
+        "rssi": -67,
+        "show": false
+    },
+    {
+        "id": 42,
+        "epc": "e28068940000502fbf218d78",
+        "count": 4,
+        "rssi": -54,
+        "show": false
+    },
+    {
+        "id": 43,
+        "epc": "111111138901234424242424",
+        "count": 2,
+        "rssi": -65,
+        "show": false
+    },
+    {
+        "id": 44,
+        "epc": "e28068940000402fbf220478",
+        "count": 4,
+        "rssi": -61,
+        "show": false
+    },
+    {
+        "id": 45,
+        "epc": "e28068940000402fbf259479",
+        "count": 3,
+        "rssi": -50,
+        "show": false
+    },
+    {
+        "id": 46,
+        "epc": "e28068940000502fbf259c79",
+        "count": 1,
+        "rssi": -68,
+        "show": false
+    }
+]

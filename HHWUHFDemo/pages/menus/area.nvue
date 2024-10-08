@@ -1,0 +1,110 @@
+<template>
+	<view>
+		<list-view ref="listView" class="list" :scroll-y="true">
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#1AAD19;borderColor:#1AAD19;margin-bottom: 20px;"
+			hover-class="is-hover" @click="go('menu', 'Da-Fa')">Da-Fa(TW)</button>
+			<button size="default" type="default"
+			style="color:#ffffff;backgroundColor:#00aaff;borderColor:#00aaff;margin-bottom: 20px;"
+			hover-class="is-hover" @click="go('menu', 'IAA')">IAA(USA)</button>
+		</list-view>
+	</view>
+	<view>
+		<div class="buttom-bar">{{ showUser() }}</div>
+	</view>
+</template>
+
+<script setup>
+	import { ref } from "vue"
+	import {
+		onLoad,
+		onShow,
+		onHide,
+	} from "@dcloudio/uni-app"
+	
+	const dataSet = ref();
+	const showUser = () => {
+		return dataSet.value.userId
+	}
+	
+	const go = (path, area) => {
+		getApp().globalData.dataSet.area = area
+		uni.navigateTo({
+			url: `/pages/menus/${path}`
+		});
+	}
+	
+	onLoad(() => {
+		dataSet.value = getApp().globalData.dataSet
+	})
+	
+	
+	
+</script>
+
+<style scoped>
+	.list {
+		flex: 1;
+		margin-top: 30px;
+		margin: 50 30;
+	}
+	
+	.list-item-head {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+	}
+	
+	.list-item {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+	}
+	
+	.list-item-text-id {
+		width: 65px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.list-item-text-epc {
+		width: 247px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.list-item-text-count {
+		width: 65px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.list-item-text-rssi {
+		width: 35px;
+		padding-left: 5px;
+		padding-right: 5px;
+		padding-top: 8px;
+		padding-bottom: 8px;
+		font-size: 16px;
+	}
+	
+	.btn-box {
+		display: flex;
+		flex-direction: row;
+		background-color: #fff;
+		padding-bottom: 5px;
+		padding-left: 5px;
+		padding-right: 5px;
+		align-items: center;
+	}
+	
+</style>
